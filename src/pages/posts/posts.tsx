@@ -1,14 +1,10 @@
 import { useState, useEffect } from 'react';
 import styles from './posts.module.scss'
 import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { Post } from '../../types';
 
 const POSTS_PER_PAGE = 10;
-
-interface Post {
-	id: number;
-	title: string;
-	body: string;
-}
 
 export default function PostsPage() {
 	const [isLoading, setLoading] = useState(false);
@@ -39,64 +35,25 @@ export default function PostsPage() {
 		setCurrentPage(prevPage => prevPage - 1);
 	};
 
-	const totalPages = Math.ceil(totalCount / POSTS_PER_PAGE);
-	// const paginationButtons = Array.from({ length: totalPages }, (_, index) => (
-	// 	<button
-	// 		key={index + 1}
-	// 		onClick={() => setCurrentPage(index + 1)}
-	// 		className={`${styles.pageButton} ${currentPage === index + 1 ? styles.active : ''}`}
-	// 		disabled={isLoading}
-	// 	>
-	// 		{index + 1}
-	// 	</button>
-	// ));
+	const handleDelete = async (id: number) => {
+		setLoading(true)
+		try {
+			const response = await fetch(`https://jsonplaceholder.typicode.com/posts/${id}`, {
+				method: 'DELETE',
+			});
 
-	const getPaginationButtons = () => {
-		const buttons = [];
-
-		if (currentPage > 3) {
-			buttons.push(
-				<button
-					key={1}
-					onClick={() => setCurrentPage(1)}
-					className={styles.pageButton}
-				>
-					1
-				</button>
-			);
-			if (currentPage > 4) {
-				buttons.push(<span key="ellipsis-start">...</span>);
+			if (response.ok) {
+				setPosts(posts.filter(post => post.id !== id));
+				toast.success('Post was deleted', { autoClose: 1000, hideProgressBar: true })
+			} else {
+				throw Error()
 			}
+		} catch {
+			toast.error('Error occurred during deletion of post, retry.')
 		}
-
-		for (let i = Math.max(1, currentPage - 1); i <= Math.min(totalPages, currentPage + 1); i++) {
-			buttons.push(
-				<button
-					key={i}
-					onClick={() => setCurrentPage(i)}
-					className={`${styles.pageButton} ${currentPage === i ? styles.active : ''}`}
-				>
-					{i}
-				</button>
-			);
+		finally {
+			setLoading(false)
 		}
-
-		if (currentPage < totalPages - 2) {
-			if (currentPage < totalPages - 3) {
-				buttons.push(<span key="ellipsis-end">...</span>);
-			}
-			buttons.push(
-				<button
-					key={totalPages}
-					onClick={() => setCurrentPage(totalPages)}
-					className={styles.pageButton}
-				>
-					{totalPages}
-				</button>
-			);
-		}
-
-		return buttons;
 	};
 
 	return (
@@ -109,7 +66,7 @@ export default function PostsPage() {
 					disabled={currentPage === 1 || isLoading}>
 					Previous
 				</button>
-				{getPaginationButtons()}
+				{`Page ${currentPage}/${totalPageCount}`}
 				<button
 					onClick={handleNextPage}
 					className={styles.pageButton}
@@ -121,7 +78,14 @@ export default function PostsPage() {
 			<ul className={styles.postList}>
 				{posts.map(post => (
 					<li key={post.id} className={styles.postItem}>
-						<Link to={`post/${post.id}`} className={styles.postLink}>{post.title}</Link>
+						<div className={styles.postContent}>
+							<h2 className={styles.postTitle}>{post.title}</h2>
+							<p className={styles.postBody}>{post.body}</p>
+						</div>
+						<div className={styles.postActions}>
+							<button onClick={() => { }} className={styles.editButton}>Edit</button>
+							<button onClick={() => handleDelete(post.id)} className={styles.deleteButton}>Delete</button>
+						</div>
 					</li>
 				))}
 			</ul>

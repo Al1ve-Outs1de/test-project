@@ -32,7 +32,7 @@ export default function CreatePostPage() {
 			}
 		})
 			.catch(() => {
-				toast.error('Error occured. Please, try again.')
+				toast.error('Error occurred. Please, try again.')
 			})
 			.finally(() => {
 				setIsSubmitting(false);
