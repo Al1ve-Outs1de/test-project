@@ -1,0 +1,32 @@
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import styles from './post.module.scss';
+
+type Post = {
+	id: number;
+	title: string;
+	body: string;
+};
+
+export default function PostDetailPage() {
+	const { id } = useParams<{ id: string }>();
+	const [post, setPost] = useState<Post | null>(null);
+
+	useEffect(() => {
+		fetch(`https://jsonplaceholder.typicode.com/posts/${id}`)
+			.then(response => response.json())
+			.then(data => setPost(data));
+	}, [id]);
+
+	if (!post) {
+		return <div>Loading...</div>;
+	}
+
+	return (
+		<div className={styles.container}>
+			<Link to='/' className={styles.buttonBack}>Back to posts</Link>
+			<h1 className={styles.title}>{post.title}</h1>
+			<p className={styles.body}>{post.body}</p>
+		</div>
+	);
+}
