@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import styles from './post.module.scss';
 
 type Post = {
@@ -10,6 +10,7 @@ type Post = {
 
 export default function PostDetailPage() {
 	const { id } = useParams<{ id: string }>();
+	const state = useLocation().state as { currentPage?: string }
 	const [post, setPost] = useState<Post | null>(null);
 
 	useEffect(() => {
@@ -24,7 +25,7 @@ export default function PostDetailPage() {
 
 	return (
 		<div className={styles.container}>
-			<Link to='/' className={styles.buttonBack}>Back to posts</Link>
+			<Link to='/' state={{ currentPage: state?.currentPage || 1 }} className={styles.buttonBack}>Back to posts</Link>
 			<h1 className={styles.title}>{post.title}</h1>
 			<p className={styles.body}>{post.body}</p>
 		</div>

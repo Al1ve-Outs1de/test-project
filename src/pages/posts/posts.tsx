@@ -1,16 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import styles from './posts.module.scss'
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Post } from '../../types';
+import PostItem from '../../components/post-item';
 
 const POSTS_PER_PAGE = 10;
 
 export default function PostsPage() {
 	const [isLoading, setLoading] = useState(false);
 	const [posts, setPosts] = useState<Post[]>([]);
-	const [currentPage, setCurrentPage] = useState(1);
-	const [totalCount, setTotalCount] = useState(0);
+	const [currentPage, setCurrentPage] = useState(useLocation().state?.currentPage as number || 1);
 	const [totalPageCount, setTotalPageCount] = useState(0);
 
 	useEffect(() => {
@@ -18,7 +18,6 @@ export default function PostsPage() {
 		fetch(`https://jsonplaceholder.typicode.com/posts?_page=${currentPage}&_limit=${POSTS_PER_PAGE}`)
 			.then(response => {
 				const postsCount = +response.headers.get('x-total-count')!
-				setTotalCount(postsCount);
 				setTotalPageCount(postsCount / POSTS_PER_PAGE)
 
 				return response.json();
@@ -35,7 +34,7 @@ export default function PostsPage() {
 		setCurrentPage(prevPage => prevPage - 1);
 	};
 
-	const handleDelete = async (id: number) => {
+	const handleDelete = useCallback(async (id: number) => {
 		setLoading(true)
 		try {
 			const response = await fetch(`https://jsonplaceholder.typicode.com/posts/${id}`, {
@@ -43,7 +42,7 @@ export default function PostsPage() {
 			});
 
 			if (response.ok) {
-				setPosts(posts.filter(post => post.id !== id));
+				setPosts(posts => posts.filter(post => post.id !== id));
 				toast.success('Post was deleted', { autoClose: 1000, hideProgressBar: true })
 			} else {
 				throw Error()
@@ -54,7 +53,32 @@ export default function PostsPage() {
 		finally {
 			setLoading(false)
 		}
-	};
+	}, []);
+
+	const handleSaveEdit = useCallback(async (editedPost: Post) => {
+		try {
+			const response = await fetch(`https://jsonplaceholder.typicode.com/posts/${editedPost.id}`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					'title': editedPost.title,
+					'body': editedPost.body
+				}),
+			});
+
+			if (response.ok) {
+				setPosts(posts => posts.map(post => (post.id === editedPost.id ? { ...editedPost } : post)));
+				return true
+			} else {
+				throw Error()
+			}
+		} catch {
+			toast.error('Could not send request, retry.')
+			return false
+		}
+	}, [])
 
 	return (
 		<div className={styles.container}>
@@ -77,16 +101,7 @@ export default function PostsPage() {
 			</div>
 			<ul className={styles.postList}>
 				{posts.map(post => (
-					<li key={post.id} className={styles.postItem}>
-						<div className={styles.postContent}>
-							<h2 className={styles.postTitle}>{post.title}</h2>
-							<p className={styles.postBody}>{post.body}</p>
-						</div>
-						<div className={styles.postActions}>
-							<button onClick={() => { }} className={styles.editButton}>Edit</button>
-							<button onClick={() => handleDelete(post.id)} className={styles.deleteButton}>Delete</button>
-						</div>
-					</li>
+					<PostItem key={post.id} currentPage={currentPage} post={post} handleDelete={handleDelete} handleSaveEdit={handleSaveEdit} />
 				))}
 			</ul>
 			<Link to={'create-post'} className={styles.pageButton}>Create new post</Link>
