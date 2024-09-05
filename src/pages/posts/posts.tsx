@@ -24,8 +24,6 @@ export default function PostsPage() {
 				return response.json();
 			})
 			.then(data => {
-				console.log(data);
-				data.forEach((post) => console.log(post))
 				setPosts(data);
 			})
 			.finally(() => setLoading(false))
