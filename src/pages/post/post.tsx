@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import styles from './post.module.scss';
+import Loader from '../../components/loader';
 
 type Post = {
 	id: number;
@@ -20,7 +21,7 @@ export default function PostDetailPage() {
 	}, [id]);
 
 	if (!post) {
-		return <div>Loading...</div>;
+		return <Loader />
 	}
 
 	return (

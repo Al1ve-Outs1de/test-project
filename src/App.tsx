@@ -4,6 +4,7 @@ import PostPage from './pages/post/post'
 import CreatePostPage from './pages/create-post/create-post'
 import './App.css'
 import "react-toastify/dist/ReactToastify.css";
+import NotFoundPage from './pages/not-found/not-found'
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         <Route path='/' element={<PostsPage />} />
         <Route path='/post/:id' element={<PostPage />} />
         <Route path='/create-post' element={<CreatePostPage />} />
+        <Route path='*' element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   )
